@@ -1,23 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import PokemonPics from "./components/PokemonPics";
 
 function App() {
+  const [allPokemon, setAllPokemon] = useState([]);
+  const [loadMore, setLoadMore] = useState(
+    "https://pokeapi.co/api/v2/pokemon?limit=20"
+  );
+
+  const getAllPokemon = async () => {
+    const res = await fetch(loadMore);
+    const data = await res.json();
+
+    setLoadMore(data.next);
+
+    function createPokemonObject(result) {
+      result.forEach(async (pokemon) => {
+        const res = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${pokemon.name}`
+        );
+        const data = await res.json();
+
+        setAllPokemon((currentList) => [...currentList, data]);
+      });
+    }
+    createPokemonObject(data.results);
+    await console.log(allPokemon);
+  };
+
+  useEffect(() => {
+    getAllPokemon();
+  },[]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app-container">
+      <h1>Pokedex</h1>
+      <div className="pokemon-container">
+        <div className="all-container">
+          {allPokemon.map((pokemon, index) => (
+            <PokemonPics
+              id={pokemon.id}
+              image={pokemon.sprites.other.dream_world.front_default}
+              name={pokemon.name}
+              type={pokemon.types[0].type.name}
+              key={index}
+            />
+          ))}
+        </div>
+        <button className="loadMore" onClick={() => getAllPokemon()}>
+          Catch Em!
+        </button>
+      </div>
     </div>
   );
 }
